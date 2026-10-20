@@ -486,9 +486,9 @@ export const Outro: React.FC = () => {
               <LogoReveal
                 src={CHANGAN}
                 {...changan}
-                start={42}
+                start={22}
                 fromRight={false}
-                shineAt={96}
+                shineAt={86}
               />
               <div
                 style={{
@@ -502,9 +502,9 @@ export const Outro: React.FC = () => {
               <LogoReveal
                 src={LULUAT}
                 {...luluat}
-                start={22}
+                start={42}
                 fromRight
-                shineAt={86}
+                shineAt={96}
               />
             </>
           )}
