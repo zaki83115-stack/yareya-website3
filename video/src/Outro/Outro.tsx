@@ -426,8 +426,8 @@ export const Outro: React.FC = () => {
   const divider = smooth(frame, 50, 85);
 
   const luluat = vertical
-    ? { width: 880, height: 166 }
-    : { width: 700, height: 132 };
+    ? { width: 690, height: 131 }
+    : { width: 600, height: 114 };
   const changan = vertical
     ? { width: 640, height: 126 }
     : { width: 560, height: 110 };
