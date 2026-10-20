@@ -3,6 +3,7 @@ import "@fontsource/cairo/800.css";
 import { useEffect, useState } from "react";
 import {
   AbsoluteFill,
+  Audio,
   Easing,
   Img,
   continueRender,
@@ -21,6 +22,7 @@ const ease = Easing.bezier(0.22, 1, 0.36, 1);
 
 const LULUAT = staticFile("outro/luluat-light.png");
 const CHANGAN = staticFile("outro/changan-light.png");
+const SFX = staticFile("outro/outro-sfx.wav");
 
 // Wait for the Arabic font so the first frames never render with a fallback.
 const useCairo = () => {
@@ -42,7 +44,7 @@ const smooth = (frame: number, from: number, to: number) =>
 
 const Background: React.FC = () => {
   const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
+  const { durationInFrames, width, height } = useVideoConfig();
   const t = frame / 30;
   const intro = smooth(frame, 0, 30);
 
@@ -61,7 +63,7 @@ const Background: React.FC = () => {
           width: 900,
           height: 900,
           borderRadius: "50%",
-          left: 1250 + Math.sin(t * 0.6) * 90,
+          left: width - 670 + Math.sin(t * 0.6) * 90,
           top: -250 + Math.cos(t * 0.5) * 70,
           background: `radial-gradient(circle, ${NAVY}cc 0%, transparent 65%)`,
           filter: "blur(40px)",
@@ -74,7 +76,7 @@ const Background: React.FC = () => {
           height: 800,
           borderRadius: "50%",
           left: -300 + Math.cos(t * 0.5) * 80,
-          top: 520 + Math.sin(t * 0.7) * 60,
+          top: height - 560 + Math.sin(t * 0.7) * 60,
           background: `radial-gradient(circle, ${RED}55 0%, transparent 65%)`,
           filter: "blur(50px)",
         }}
@@ -87,8 +89,8 @@ const Background: React.FC = () => {
           position: "absolute",
           top: -400,
           width: 420,
-          height: 1900,
-          left: interpolate(frame, [4, 44], [-700, 2300], {
+          height: height + 900,
+          left: interpolate(frame, [4, 44], [-700, width + 400], {
             easing: Easing.inOut(Easing.cubic),
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
@@ -123,6 +125,7 @@ const Background: React.FC = () => {
 // Curved bands echoing the Luluat Al Bakhet mark.
 const Arcs: React.FC = () => {
   const frame = useCurrentFrame();
+  const { width, height } = useVideoConfig();
   const bands = [
     { r: 620, color: "#ffffff", w: 34, delay: 0 },
     { r: 700, color: RED, w: 34, delay: 6 },
@@ -150,11 +153,11 @@ const Arcs: React.FC = () => {
     });
 
   return (
-    <svg width={1920} height={1080} style={{ position: "absolute" }}>
-      <g transform={`translate(${1920 + 120 + drift}, ${-60}) rotate(0)`}>
+    <svg width={width} height={height} style={{ position: "absolute" }}>
+      <g transform={`translate(${width + 120 + drift}, ${-60}) rotate(0)`}>
         {renderSet(false)}
       </g>
-      <g transform={`translate(${-120 - drift}, ${1080 + 60}) rotate(180)`}>
+      <g transform={`translate(${-120 - drift}, ${height + 60}) rotate(180)`}>
         {renderSet(true)}
       </g>
     </svg>
@@ -163,13 +166,15 @@ const Arcs: React.FC = () => {
 
 const Particles: React.FC = () => {
   const frame = useCurrentFrame();
+  const { width, height } = useVideoConfig();
+  const span = height + 100;
   return (
     <AbsoluteFill>
-      {new Array(55).fill(0).map((_, i) => {
-        const x = random(`x${i}`) * 1920;
+      {new Array(Math.round((width * height) / 37000)).fill(0).map((_, i) => {
+        const x = random(`x${i}`) * width;
         const speed = 0.3 + random(`s${i}`) * 0.9;
         const y =
-          ((((random(`y${i}`) * 1180 - frame * speed) % 1180) + 1180) % 1180) -
+          ((((random(`y${i}`) * span - frame * speed) % span) + span) % span) -
           50;
         const size = 2 + random(`z${i}`) * 4;
         const tw = 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(frame / 12 + i));
@@ -262,7 +267,7 @@ const PhoneIcon: React.FC = () => (
   </svg>
 );
 
-const Contact: React.FC = () => {
+const Contact: React.FC<{ vertical: boolean }> = ({ vertical }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const words = ["للاستفسار", "الاتصال", "على", "الرقم"];
@@ -290,7 +295,7 @@ const Contact: React.FC = () => {
           display: "flex",
           gap: 22,
           direction: "rtl",
-          fontSize: 62,
+          fontSize: vertical ? 70 : 62,
           fontWeight: 600,
         }}
       >
@@ -314,9 +319,9 @@ const Contact: React.FC = () => {
 
       <div
         style={{
-          width: 560 * lineP,
+          width: (vertical ? 640 : 560) * lineP,
           height: 3,
-          margin: "18px 0 22px",
+          margin: vertical ? "26px 0 34px" : "18px 0 22px",
           borderRadius: 3,
           background: `linear-gradient(90deg, transparent, ${RED}, #ffffff, ${RED}, transparent)`,
         }}
@@ -390,7 +395,7 @@ const Contact: React.FC = () => {
                 key={i}
                 style={{
                   display: "inline-block",
-                  fontSize: 176,
+                  fontSize: vertical ? 200 : 176,
                   fontWeight: 800,
                   lineHeight: 1.15,
                   letterSpacing: 6,
@@ -415,12 +420,21 @@ const Contact: React.FC = () => {
 export const Outro: React.FC = () => {
   useCairo();
   const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
+  const { durationInFrames, width, height } = useVideoConfig();
+  const vertical = height > width;
   const push = interpolate(frame, [0, durationInFrames], [1, 1.045]);
   const divider = smooth(frame, 50, 85);
 
+  const luluat = vertical
+    ? { width: 880, height: 166 }
+    : { width: 700, height: 132 };
+  const changan = vertical
+    ? { width: 640, height: 126 }
+    : { width: 560, height: 110 };
+
   return (
     <AbsoluteFill style={{ backgroundColor: "#040b18" }}>
+      <Audio src={SFX} />
       <Background />
       <AbsoluteFill
         style={{
@@ -428,44 +442,74 @@ export const Outro: React.FC = () => {
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "column",
-          gap: 90,
+          gap: vertical ? 170 : 90,
+          paddingBottom: vertical ? 200 : 0,
         }}
       >
         <div
           style={{
             display: "flex",
+            flexDirection: vertical ? "column" : "row",
             alignItems: "center",
-            gap: 80,
+            gap: vertical ? 70 : 80,
             direction: "ltr",
           }}
         >
-          <LogoReveal
-            src={CHANGAN}
-            width={560}
-            height={110}
-            start={42}
-            fromRight={false}
-            shineAt={96}
-          />
-          <div
-            style={{
-              width: 3,
-              height: 150 * divider,
-              borderRadius: 3,
-              background:
-                "linear-gradient(180deg, transparent, rgba(255,255,255,0.85), transparent)",
-            }}
-          />
-          <LogoReveal
-            src={LULUAT}
-            width={700}
-            height={132}
-            start={22}
-            fromRight
-            shineAt={86}
-          />
+          {vertical ? (
+            <>
+              <LogoReveal
+                src={LULUAT}
+                {...luluat}
+                start={22}
+                fromRight
+                shineAt={86}
+              />
+              <div
+                style={{
+                  width: 520 * divider,
+                  height: 3,
+                  borderRadius: 3,
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent)",
+                }}
+              />
+              <LogoReveal
+                src={CHANGAN}
+                {...changan}
+                start={42}
+                fromRight={false}
+                shineAt={96}
+              />
+            </>
+          ) : (
+            <>
+              <LogoReveal
+                src={CHANGAN}
+                {...changan}
+                start={42}
+                fromRight={false}
+                shineAt={96}
+              />
+              <div
+                style={{
+                  width: 3,
+                  height: 150 * divider,
+                  borderRadius: 3,
+                  background:
+                    "linear-gradient(180deg, transparent, rgba(255,255,255,0.85), transparent)",
+                }}
+              />
+              <LogoReveal
+                src={LULUAT}
+                {...luluat}
+                start={22}
+                fromRight
+                shineAt={86}
+              />
+            </>
+          )}
         </div>
-        <Contact />
+        <Contact vertical={vertical} />
       </AbsoluteFill>
     </AbsoluteFill>
   );
