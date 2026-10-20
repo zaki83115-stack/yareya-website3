@@ -458,10 +458,10 @@ export const Outro: React.FC = () => {
           {vertical ? (
             <>
               <LogoReveal
-                src={LULUAT}
-                {...luluat}
+                src={CHANGAN}
+                {...changan}
                 start={22}
-                fromRight
+                fromRight={false}
                 shineAt={86}
               />
               <div
@@ -474,10 +474,10 @@ export const Outro: React.FC = () => {
                 }}
               />
               <LogoReveal
-                src={CHANGAN}
-                {...changan}
+                src={LULUAT}
+                {...luluat}
                 start={42}
-                fromRight={false}
+                fromRight
                 shineAt={96}
               />
             </>
